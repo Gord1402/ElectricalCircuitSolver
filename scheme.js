@@ -316,7 +316,6 @@ class Graph {
         for (var i = 0; i < this.count_points; i++) {
             this.points[i].potential = 0;
         }
-        var stack = this.get_connected(point_start);
         this.points[point_start].potential = 1;
         this.points[point_end].potential = -1;
         var changed = 1;
@@ -380,7 +379,7 @@ class Graph {
         while (changed) {
             changed = false;
             this.connections.forEach((connection) => {
-                if (connection.amperage != undefined) return;
+                if (connection.amperage != undefined|| connection.direction == 0) return;
                 var input_connections = this.get_connections(
                     connection.input,
                     "output"
@@ -390,9 +389,9 @@ class Graph {
 
                 if (
                     !input_connections.every((input_connection) => {
-                        if (input_connection.amperage == undefined)
+                        if (input_connection.amperage == undefined && input_connection.direction != 0)
                             return false;
-                        summary_amperage += input_connection.amperage;
+                        if (input_connection.amperage != undefined) summary_amperage += input_connection.amperage;
                         return true;
                     })
                 )
@@ -407,7 +406,8 @@ class Graph {
                 var count = parallel_connections.length;
 
                 parallel_connections.forEach((parallel_connection) => {
-                    sum += parallel_connection.output.potential;
+                    if (parallel_connection.direction != 0) sum += parallel_connection.output.potential;
+                    else count -= 1;
                 });
 
                 var ratio =
@@ -456,13 +456,19 @@ class Graph {
 
         while (point.id != point_end) {
             var input_connections = this.get_connections(point, "input");
-            one_way += input_connections[0].amperage;
+            var connection = undefined;
+            for (var i = 0;i < input_connections.length;i++){
+                if (input_connections[i].amperage && input_connections[i].amperage > 0) {
+                    connection = input_connections[i];
+                }
+            }
+            one_way += connection.amperage;
             if (point.id != point_start) solution += " + ";
             solution +=
                 "(" +
-                fraction2str(approx_fraction(input_connections[0].amperage)) +
+                fraction2str(approx_fraction(connection.amperage)) +
                 ") * IR";
-            point = input_connections[0].output;
+            point = connection.output;
         }
         solution +=
             ") / ((" +
