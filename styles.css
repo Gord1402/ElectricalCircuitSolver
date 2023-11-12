@@ -1,0 +1,100 @@
+.app {
+    --side-bar-width: 375px;
+    --top-bar-heigth: 65px;
+
+    --content-bg: rgb(180, 214, 218);
+}
+
+.dark {
+    --content-bg: rgb(28, 32, 32);
+}
+
+.app .topbar {
+    background: #db3f59;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: var(--top-bar-heigth);
+    align-items: center;
+}
+
+.app .sidebar {
+    background: rgb(126, 186, 209);
+    position: fixed;
+    top: var(--top-bar-heigth);
+    left: 0;
+    width: var(--side-bar-width);
+    height: 100%;
+    padding: 20px 0;
+}
+
+.content {
+    background: var(--content-bg);
+    position: fixed;
+    top: var(--top-bar-heigth);
+    left: var(--side-bar-width);
+    height: 100%;
+    width: 100%;
+}
+
+.span_button {
+    padding: 0;
+    border: none;
+    border-radius: 5px;
+    background: none;
+    transition: background 0.5s, border 0.5s;
+}
+
+.span_button:hover {
+    background: #ffffff63;
+    border: #ffffff63;
+    border-radius: 5px;
+    transition: background 0.5s, border 0.5s;
+}
+
+.button_span {
+    font-size: 35;
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Old versions of Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+}
+
+.right_side {
+    position: relative;
+    height: 50%;
+    top: 25%;
+    vertical-align: center;
+    float: right;
+}
+
+.sidebar ul {
+    list-style: none;
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+.sidebar li {
+    display: inline;
+}
+
+.solution {
+    overflow-x: scroll;
+    overflow-y: hidden;
+    scrollbar-color: #999 #333;
+}
+.solution::-webkit-scrollbar {
+    width: 10px; /* Mostly for vertical scrollbars */
+    height: 10px; /* Mostly for horizontal scrollbars */
+}
+.solution::-webkit-scrollbar-thumb {
+    /* Foreground */
+    background: #999;
+}
+.solution::-webkit-scrollbar-track {
+    /* Background */
+    background: #333;
+}
