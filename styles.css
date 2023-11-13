@@ -3,14 +3,21 @@
     --top-bar-heigth: 65px;
 
     --content-bg: rgb(180, 214, 218);
+    --top_bar-bg: #db3f59;
+    --side_bar-bg: rgb(126, 186, 209);
+    --button-color: rgb(0, 0, 0);
 }
 
 .dark {
-    --content-bg: rgb(28, 32, 32);
+    --content-bg: rgb(35, 48, 57);
+    --top_bar-bg: #1a1a1a;
+    --side_bar-bg: rgb(26, 39, 52);
+    color:  #cccccc;
+    --button-color: rgb(190, 204, 233);
 }
 
 .app .topbar {
-    background: #db3f59;
+    background: var(--top_bar-bg);
     position: fixed;
     top: 0;
     left: 0;
@@ -20,7 +27,7 @@
 }
 
 .app .sidebar {
-    background: rgb(126, 186, 209);
+    background: var(--side_bar-bg);
     position: fixed;
     top: var(--top-bar-heigth);
     left: 0;
@@ -55,6 +62,7 @@
 
 .button_span {
     font-size: 35;
+    color: var(--button-color);
     -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
     -khtml-user-select: none; /* Konqueror HTML */
@@ -63,6 +71,7 @@
     user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome, Edge, Opera and Firefox */
 }
+
 
 .right_side {
     position: relative;
