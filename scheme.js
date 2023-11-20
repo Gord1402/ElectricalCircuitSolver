@@ -370,7 +370,7 @@ class Graph {
         this.points[point_start].potential = 1;
         this.points[point_end].potential = -1;
         var changed = 1;
-        for (var j = 0; j < 70000; j++) {
+        for (var j = 0; j < 140000; j++) {
             changed = 0;
             this.points.forEach((point) => {
                 if (point.id == point_start || point.id == point_end) return;
