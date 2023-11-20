@@ -19,11 +19,12 @@ function intersects(line1_start, line1_end, line2_start, line2_end) {
 }
 
 class Connection {
-    constructor(point0, point1, graph) {
+    constructor(point0, point1, graph, resistance = 1) {
         this.point0 = point0;
         this.point1 = point1;
         this.graph = graph;
         this.direction = 0;
+        this.resistance = resistance;
         this.amperage = undefined;
     }
 
@@ -45,42 +46,91 @@ class Connection {
             context.fillStyle = "rgb(0, 0, 0)";
             context.strokeStyle = "rgb(0, 0, 0)";
         }
+
+        var vec = this.vector;
+        var norm = this.normal;
+
         context.beginPath();
-        context.moveTo(this.point0.position.x, this.point0.position.y);
-        context.lineTo(this.point1.position.x, this.point1.position.y);
+        context.moveTo(this.point0.position.x + this.graph.x, this.point0.position.y + this.graph.y);
+        var p1 = Vector.add(Vector.mul(vec, 0.3333333333), this.point0.position);
+        context.lineTo(p1.x + this.graph.x, p1.y + this.graph.y);
+        var p2 = Vector.add(Vector.mul(vec, 0.6666666666), this.point0.position);
+        context.moveTo(p2.x + this.graph.x, p2.y + this.graph.y);
+        context.lineTo(this.point1.position.x + this.graph.x, this.point1.position.y + this.graph.y);
         context.stroke();
+
+        context.moveTo(p1.x + this.graph.x, p1.y + this.graph.y);
+        context.lineTo(p1.x + norm.x * 10 + this.graph.x, p1.y + norm.y * 10 + this.graph.y);
+        context.lineTo(p2.x + norm.x * 10 + this.graph.x, p2.y + norm.y * 10 + this.graph.y);
+        context.lineTo(p2.x + this.graph.x, p2.y + this.graph.y);
+        context.lineTo(p2.x - norm.x * 10 + this.graph.x, p2.y - norm.y * 10 + this.graph.y);
+        context.lineTo(p1.x - norm.x * 10 + this.graph.x, p1.y - norm.y * 10 + this.graph.y);
+        context.lineTo(p1.x + this.graph.x, p1.y + this.graph.y);
+        context.stroke();
+
+        if (true){
+            var pos = Vector.add(Vector.mul(vec, 0.5), this.point0.position); 
+            context.font = "20px script";
+            context.textAlign = "center";
+            context.save();
+            if (vec.x < 0){
+                context.translate(
+                    pos.x - norm.x * 5 + this.graph.x,
+                    pos.y - norm.y * 5  + this.graph.y
+                );
+                context.rotate(Math.atan2(vec.y, vec.x) - Math.PI);
+            }
+            else 
+            {
+                context.translate(
+                    pos.x + norm.x * 5 + this.graph.x,
+                    pos.y + norm.y * 5 + this.graph.y
+                );
+                context.rotate(Math.atan2(vec.y, vec.x));
+            }
+            context.fillText(
+                "(" + fraction2str(approx_fraction(this.resistance)) + ") R",
+                0,
+                0
+            );
+            context.restore();
+            context.font = "10px sans-serif";
+            context.textAlign = "start";
+        }
+
+
         if (this.direction != 0) {
             var arrow_start = Vector.add(
-                Vector.add(Vector.mul(this.vector, 0.25), this.point0.position),
-                Vector.mul(this.normal, 15)
+                Vector.add(Vector.mul(vec, 0.25), this.point0.position),
+                Vector.mul(norm, 15)
             );
             var arrow_end = Vector.add(
-                Vector.add(Vector.mul(this.vector, 0.75), this.point0.position),
-                Vector.mul(this.normal, 15)
+                Vector.add(Vector.mul(vec, 0.75), this.point0.position),
+                Vector.mul(norm, 15)
             );
             context.beginPath();
-            context.moveTo(arrow_start.x, arrow_start.y);
-            context.lineTo(arrow_end.x, arrow_end.y);
+            context.moveTo(arrow_start.x + this.graph.x, arrow_start.y + this.graph.y);
+            context.lineTo(arrow_end.x + this.graph.x, arrow_end.y + this.graph.y);
 
             var branch_parent = this.direction > 0 ? arrow_end : arrow_start;
             var text_parent = Vector.add(
-                Vector.add(Vector.mul(this.vector, 0.5), this.point0.position),
-                Vector.mul(this.normal, 15)
+                Vector.add(Vector.mul(vec, 0.5), this.point0.position),
+                Vector.mul(norm, 15)
             );
             var branch_dir = this.direction > 0 ? -1 : 1;
 
-            context.moveTo(branch_parent.x, branch_parent.y);
+            context.moveTo(branch_parent.x + this.graph.x, branch_parent.y + this.graph.y);
             var branch0 = Vector.add(
-                Vector.add(branch_parent, Vector.mul(this.normal, 5)),
+                Vector.add(branch_parent, Vector.mul(norm, 5)),
                 Vector.mul(this.normalized_vector, 10 * branch_dir)
             );
             var branch1 = Vector.add(
-                Vector.add(branch_parent, Vector.mul(this.normal, -5)),
+                Vector.add(branch_parent, Vector.mul(norm, -5)),
                 Vector.mul(this.normalized_vector, 10 * branch_dir)
             );
-            context.lineTo(branch0.x, branch0.y);
-            context.moveTo(branch_parent.x, branch_parent.y);
-            context.lineTo(branch1.x, branch1.y);
+            context.lineTo(branch0.x + this.graph.x, branch0.y + this.graph.y);
+            context.moveTo(branch_parent.x + this.graph.x, branch_parent.y + this.graph.y);
+            context.lineTo(branch1.x + this.graph.x, branch1.y + this.graph.y);
 
             context.stroke();
 
@@ -88,11 +138,9 @@ class Connection {
                 context.font = "20px script";
                 context.textAlign = "center";
                 context.save();
-                var vec = this.vector;
-                var norm = this.normal;
                 context.translate(
-                    text_parent.x + norm.x * 10,
-                    text_parent.y + norm.y * 10
+                    text_parent.x + norm.x * 10 + this.graph.x,
+                    text_parent.y + norm.y * 10 + this.graph.y
                 );
                 if (vec.x < 0)
                     context.rotate(Math.atan2(vec.y, vec.x) - Math.PI);
@@ -177,14 +225,14 @@ class Point {
     draw(context, theme) {
         this.set_theme(theme);
         context.beginPath();
-        context.arc(this.position.x, this.position.y, 5, 0, Math.PI * 2, false);
+        context.arc(this.position.x + this.graph.x, this.position.y + this.graph.y, 5, 0, Math.PI * 2, false);
         context.fill();
-        context.fillText(this.id, this.position.x - 10, this.position.y + 10);
+        context.fillText(this.id, this.position.x - 10 + this.graph.x, this.position.y + 10 + this.graph.y);
         if (this.potential != undefined) {
             context.fillText(
                 fraction2str(approx_fraction(this.potential)),
-                this.position.x + 10,
-                this.position.y - 10
+                this.position.x + 10 + this.graph.x,
+                this.position.y - 10 + this.graph.y
             );
         }
     }
@@ -195,6 +243,9 @@ class Graph {
         this.points = [];
         this.connections = [];
         this.total_amperage = undefined;
+        this.x = 0;
+        this.y = 0;
+        this.scale = 1;
     }
 
     convert(value) {
@@ -257,14 +308,14 @@ class Graph {
         this.connections.splice(connection_id, 1);
     }
 
-    connect(point0, point1) {
+    connect(point0, point1, resistance=1) {
         var first = this.convert(point0);
         var second = this.convert(point1);
 
         if (first === second) {
             throw Error("Cannot connect point with it self!");
         }
-        this.connections.push(new Connection(first, second, this));
+        this.connections.push(new Connection(first, second, this, resistance));
     }
 
     get_connected(point) {
@@ -319,7 +370,7 @@ class Graph {
         this.points[point_start].potential = 1;
         this.points[point_end].potential = -1;
         var changed = 1;
-        for (var j = 0; j < 10000; j++) {
+        for (var j = 0; j < 70000; j++) {
             changed = 0;
             this.points.forEach((point) => {
                 if (point.id == point_start || point.id == point_end) return;
@@ -327,14 +378,15 @@ class Graph {
                 var sum = 0;
                 var count = 0;
                 for (var i = 0; i < all_connected.length; i++) {
-                    sum += this.points[all_connected[i]].potential;
-                    count++;
+                    var connection_resistance = this.connections[this.find_connection(point, this.points[all_connected[i]])].resistance;
+                    sum += this.points[all_connected[i]].potential / connection_resistance;
+                    count +=  1 / connection_resistance;
                 }
                 point.potential = sum / count;
             });
         }
     }
-
+// 1 1/3  -1/3  -1
     calculate_directions(point_start, point_end) {
         for (var i = 0; i < this.count_edges; i++) {
             this.connections[i].direction = 0;
@@ -363,13 +415,13 @@ class Graph {
         var count = input_connections.length;
 
         input_connections.forEach((connection) => {
-            sum += connection.output.potential;
+            sum += 1 / connection.resistance - connection.output.potential / connection.resistance;
         });
 
-        var ratio = 1 / (count * 1 - sum);
+        var ratio = 1 / (sum);
 
         input_connections.forEach((connection) => {
-            connection.amperage = ratio * (1 - connection.output.potential);
+            connection.amperage = ratio * (1 / connection.resistance - connection.output.potential / connection.resistance);
         });
 
         var maximum_denominator = 1;
@@ -406,17 +458,17 @@ class Graph {
                 var count = parallel_connections.length;
 
                 parallel_connections.forEach((parallel_connection) => {
-                    if (parallel_connection.direction != 0) sum += parallel_connection.output.potential;
+                    if (parallel_connection.direction != 0) sum += connection.input.potential / connection.resistance - parallel_connection.output.potential / parallel_connection.resistance;
                     else count -= 1;
                 });
 
                 var ratio =
                     summary_amperage /
-                    (count * connection.input.potential - sum);
+                    (sum);
 
                 connection.amperage =
                     ratio *
-                    (connection.input.potential - connection.output.potential);
+                    (connection.input.potential - connection.output.potential) / connection.resistance;
                 changed = true;
 
                 var denominator = approx_fraction(connection.amperage)[1];
@@ -440,7 +492,7 @@ class Graph {
 
         while (point.id != point_end) {
             var input_connections = this.get_connections(point, "input");
-            one_way += input_connections[0].amperage;
+            one_way += input_connections[0].amperage * input_connections[0].resistance;
             point = input_connections[0].output;
         }
 
@@ -462,11 +514,11 @@ class Graph {
                     connection = input_connections[i];
                 }
             }
-            one_way += connection.amperage;
+            one_way += connection.amperage * connection.resistance;
             if (point.id != point_start) solution += " + ";
             solution +=
                 "(" +
-                fraction2str(approx_fraction(connection.amperage)) +
+                fraction2str(approx_fraction(connection.amperage * connection.resistance)) +
                 ") * IR";
             point = connection.output;
         }
@@ -474,7 +526,7 @@ class Graph {
             ") / ((" +
             fraction2str(approx_fraction(this.total_amperage)) +
             ") * I) = " +
-            fraction2str(approx_fraction(one_way / this.total_amperage));
+            fraction2str(approx_fraction(one_way / this.total_amperage)) + "R";
         return solution;
     }
 

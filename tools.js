@@ -6,7 +6,8 @@ class EditTool {
         this.moved = -1;
         this.drawX = 0;
         this.drawY = 0;
-        this.description = `Инструмент для создания новых точек/связей.<br/><br/><br/>
+        this.description = `Сопротивление новых соендинений: <input type="number" id="resistance" step="0.0001" min="0.00001" max="100000" value="1"/> R<br/><br/>
+Инструмент для создания новых точек/связей.<br/><br/><br/>
 ЛКМ по пустому полю - Добавить точку и начать создание связи.<br/><br/>
 ЛКМ по точке - Начать создание связи.<br/><br/>
 Зажать точку - Передвинуть.<br/><br/>
@@ -24,9 +25,23 @@ class EditTool {
         this.drawY = 0;
     }
 
+    init(){
+        if (this.resistance == undefined) this.resistance = 1;
+        this.resistance_input = document.getElementById("resistance");
+        this.resistance_input.value = this.resistance;
+        var tool = this;
+        this.resistance_input.addEventListener('change', (event)=>{
+            if (event.target.value <= 0) {
+                tool.resistance_input.value = 0.0001;
+                return
+            }
+            tool.resistance = event.target.value;
+        });
+    }
+
     mousedown(event) {
         if (event.button == 0) {
-            var pos = new Vector(event.offsetX, event.offsetY);
+            var pos = new Vector(event.offsetX - this.graph.x, event.offsetY - this.graph.y);
             var nearest = this.graph.nearest(pos);
             if (nearest > -1 && this.graph.points[nearest].distance(pos) <= 5) {
                 this.selected = nearest;
@@ -36,7 +51,7 @@ class EditTool {
             }
 
             if (this.drawing_from != -1) {
-                this.graph.connect(this.drawing_from, this.selected);
+                this.graph.connect(this.drawing_from, this.selected, this.resistance);
             }
             this.drawing_from = -1;
 
@@ -53,8 +68,8 @@ class EditTool {
             if (this.selected != -1) {
                 if (this.moved < 15) {
                     this.drawing_from = this.selected;
-                    this.drawX = event.offsetX;
-                    this.drawY = event.offsetY;
+                    this.drawX = event.offsetX - this.graph.x;
+                    this.drawY = event.offsetY - this.graph.y;
                 } else {
                     this.drawing_from = -1;
                 }
@@ -65,8 +80,8 @@ class EditTool {
 
     mousemove(event) {
         if (this.drawing_from != -1) {
-            this.drawX = event.offsetX;
-            this.drawY = event.offsetY;
+            this.drawX = event.offsetX  - this.graph.x;
+            this.drawY = event.offsetY  - this.graph.y;
         }
         if (this.selected != -1) {
             this.graph.points[this.selected].position.add(
@@ -98,14 +113,55 @@ class EditTool {
         if (this.drawing_from != -1) {
             context.beginPath();
             context.moveTo(
-                this.graph.points[this.drawing_from].position.x,
-                this.graph.points[this.drawing_from].position.y
+                this.graph.points[this.drawing_from].position.x  + this.graph.x,
+                this.graph.points[this.drawing_from].position.y  + this.graph.y
             );
-            context.lineTo(this.drawX, this.drawY);
+            context.lineTo(this.drawX + this.graph.x, this.drawY + this.graph.y);
             context.stroke();
         }
     }
 }
+
+class MoveTool {
+    constructor(graph) {
+        this.graph = graph;
+        this.dragged = false;
+        this.description = `Инструмент для перемещения по полю.<br/><br/><br/>
+Зажать ЛКМ и двигать для перемещения<br/><br/>
+`;
+    }
+
+    reset() {
+        this.dragged = false;
+    }
+
+    init(){
+        
+    }
+
+    mousedown(event) {
+        if (event.button == 0) {
+            this.dragged = true;
+        }
+    }
+
+    mouseup(event) {
+        this.dragged = false;
+    }
+
+    mousemove(event) {
+        if (this.dragged) {
+            this.graph.x += event.movementX;
+            this.graph.y += event.movementY;
+        }
+    }
+
+    keydown(event) {}
+
+    draw(context, theme) {
+    }
+}
+
 
 class DeleteTool {
     constructor(graph) {
@@ -123,9 +179,13 @@ class DeleteTool {
         this.path = [];
     }
 
+    init(){
+        
+    }
+
     mousedown(event) {
         if (event.button == 0) {
-            var pos = new Vector(event.offsetX, event.offsetY);
+            var pos = new Vector(event.offsetX - this.graph.x, event.offsetY - this.graph.y);
             var nearest = this.graph.nearest(pos);
             if (nearest > -1 && this.graph.points[nearest].distance(pos) <= 5) {
                 this.graph.remove_point(nearest);
@@ -140,7 +200,7 @@ class DeleteTool {
 
     mousemove(event) {
         if (this.dragged) {
-            var pos = new Vector(event.offsetX, event.offsetY);
+            var pos = new Vector(event.offsetX - this.graph.x, event.offsetY - this.graph.y);
             if (
                 this.path.length == 0 ||
                 Vector.len(Vector.sub(this.path[this.path.length - 1], pos)) > 5
@@ -151,8 +211,8 @@ class DeleteTool {
             var intersect = this.graph.get_intersected(
                 pos,
                 new Vector(
-                    event.offsetX - event.movementX,
-                    event.offsetY - event.movementY
+                    event.offsetX - event.movementX - this.graph.x,
+                    event.offsetY - event.movementY - this.graph.y
                 )
             );
             if (intersect != -1) {
@@ -181,9 +241,9 @@ class DeleteTool {
             context.strokeStyle = "rgb(176, 45, 54)";
         }
         context.beginPath();
-        context.moveTo(this.path[0].x, this.path[0].y);
+        context.moveTo(this.path[0].x + this.graph.x, this.path[0].y + this.graph.y);
         for (var i = 1; i < this.path.length; i++) {
-            context.lineTo(this.path[i].x, this.path[i].y);
+            context.lineTo(this.path[i].x + this.graph.x, this.path[i].y + this.graph.y);
         }
         context.stroke();
         if (this.dragged) {
@@ -213,9 +273,13 @@ class SolveTool {
         this.point_end = undefined;
     }
 
+    init(){
+        
+    }
+
     mousedown(event) {
         if (event.button == 0) {
-            var pos = new Vector(event.offsetX, event.offsetY);
+            var pos = new Vector(event.offsetX - this.graph.x, event.offsetY - this.graph.y);
             var nearest = this.graph.nearest(pos);
             if (nearest > -1 && this.graph.points[nearest].distance(pos) <= 5) {
                 if (this.point_start == undefined) {

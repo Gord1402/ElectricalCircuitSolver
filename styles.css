@@ -1,5 +1,5 @@
 .app {
-    --side-bar-width: 375px;
+    --side-bar-width: 30%;
     --top-bar-heigth: 65px;
 
     --content-bg: rgb(180, 214, 218);
@@ -106,4 +106,23 @@
 .solution::-webkit-scrollbar-track {
     /* Background */
     background: #333;
+}
+
+
+input[type=number] { 
+    -moz-appearance: textfield;
+    appearance: textfield;
+    margin: 0; 
+    width: 10%;
+    background: var(--side_bar-bg);
+    border-color: rgb(93, 120, 124);
+    border-style: solid;
+    border-radius: 5px;
+    text-align: right;
+    color: inherit;
+}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
 }

@@ -7,7 +7,7 @@ var description = document.getElementById("tool_description");
 
 var graph = new Graph();
 
-var tools = [new EditTool(graph), new DeleteTool(graph), new SolveTool(graph)];
+var tools = [new EditTool(graph), new DeleteTool(graph),new MoveTool(graph), new SolveTool(graph)];
 
 var selected_tool = 0;
 
@@ -15,6 +15,7 @@ function select_tool(id) {
     tools[selected_tool].reset();
     description.innerHTML = tools[id].description;
     selected_tool = id;
+    tools[selected_tool].init();
 }
 
 function draw(timeStamp) {
