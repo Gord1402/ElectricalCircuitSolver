@@ -18,6 +18,10 @@ function intersects(line1_start, line1_end, line2_start, line2_end) {
     }
 }
 
+function real_potential(p1, p2, R){
+    return (p1 + (R - 1) * p2) / R;
+}
+
 class Connection {
     constructor(point0, point1, graph, resistance = 1) {
         this.point0 = point0;
@@ -394,10 +398,10 @@ class Graph {
         }
         this.calculate_potentials(point_start, point_end);
         this.connections.forEach((connection) => {
-            if (connection.point0.potential > connection.point1.potential) {
+            if (Math.round(connection.point0.potential / 0.00001) * 0.00001 > Math.round(connection.point1.potential / 0.00001) * 0.00001) {
                 connection.direction = 1;
             } else if (
-                connection.point0.potential < connection.point1.potential
+                Math.round(connection.point0.potential / 0.00001) * 0.00001 < Math.round(connection.point1.potential / 0.00001) * 0.00001
             ) {
                 connection.direction = -1;
             } else {
@@ -408,80 +412,28 @@ class Graph {
 
     calculate_amperage(point_start, point_end) {
         this.calculate_directions(point_start, point_end);
-
-        var input_connections = this.get_connections(point_start, "input");
-
-        var sum = 0;
-        var count = input_connections.length;
-
-        input_connections.forEach((connection) => {
-            sum += 1 / connection.resistance - connection.output.potential / connection.resistance;
-        });
-
-        var ratio = 1 / (sum);
-
-        input_connections.forEach((connection) => {
-            connection.amperage = ratio * (1 / connection.resistance - connection.output.potential / connection.resistance);
-        });
-
         var maximum_denominator = 1;
 
-        var changed = true;
+        this.connections.forEach((connection) => {
+            if (connection.direction == 0) return;
+            connection.amperage = (connection.input.potential - connection.output.potential) / connection.resistance;
+            var denominator = approx_fraction(connection.amperage)[1];
+            if (denominator > maximum_denominator)
+                maximum_denominator = denominator;
+        });
 
-        while (changed) {
-            changed = false;
-            this.connections.forEach((connection) => {
-                if (connection.amperage != undefined|| connection.direction == 0) return;
-                var input_connections = this.get_connections(
-                    connection.input,
-                    "output"
-                );
-
-                var summary_amperage = 0;
-
-                if (
-                    !input_connections.every((input_connection) => {
-                        if (input_connection.amperage == undefined && input_connection.direction != 0)
-                            return false;
-                        if (input_connection.amperage != undefined) summary_amperage += input_connection.amperage;
-                        return true;
-                    })
-                )
-                    return;
-
-                var parallel_connections = this.get_connections(
-                    connection.input,
-                    "input"
-                );
-
-                var sum = 0;
-                var count = parallel_connections.length;
-
-                parallel_connections.forEach((parallel_connection) => {
-                    if (parallel_connection.direction != 0) sum += connection.input.potential / connection.resistance - parallel_connection.output.potential / parallel_connection.resistance;
-                    else count -= 1;
-                });
-
-                var ratio =
-                    summary_amperage /
-                    (sum);
-
-                connection.amperage =
-                    ratio *
-                    (connection.input.potential - connection.output.potential) / connection.resistance;
-                changed = true;
-
-                var denominator = approx_fraction(connection.amperage)[1];
-                if (denominator > maximum_denominator)
-                    maximum_denominator = denominator;
-            });
-        }
-
+        
         this.connections.forEach((connection) => {
             connection.amperage = connection.amperage * maximum_denominator;
         });
 
-        this.total_amperage = maximum_denominator;
+        this.total_amperage = 0;
+
+        var input_connections = this.get_connections(point_start, "input");
+
+        input_connections.forEach((connection) => {
+            this.total_amperage += connection.amperage;
+        });
     }
 
     calculate_resistance(point_start, point_end) {
