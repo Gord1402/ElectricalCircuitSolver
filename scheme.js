@@ -367,17 +367,22 @@ class Graph {
         }
     }
 
-    calculate_potentials(point_start, point_end) {
+    calculate_potentials(points) {
         for (var i = 0; i < this.count_points; i++) {
             this.points[i].potential = 0;
         }
-        this.points[point_start].potential = 1;
-        this.points[point_end].potential = -1;
+        for (var i = 0;i < points.length;i++){
+            this.points[points[i][0]].potential = points[i][1];
+        }
+        // this.points[point_start].potential = 1;
+        // this.points[point_end].potential = -1;
         var changed = 1;
         for (var j = 0; j < 140000; j++) {
             changed = 0;
             this.points.forEach((point) => {
-                if (point.id == point_start || point.id == point_end) return;
+                for (var i = 0;i < points.length;i++){
+                    if (points[i][0] == point.id) return;
+                }
                 var all_connected = this.get_connected(point);
                 var sum = 0;
                 var count = 0;
@@ -391,12 +396,12 @@ class Graph {
         }
     }
 // 1 1/3  -1/3  -1
-    calculate_directions(point_start, point_end) {
+    calculate_directions(points) {
         for (var i = 0; i < this.count_edges; i++) {
             this.connections[i].direction = 0;
             this.connections[i].amperage = undefined;
         }
-        this.calculate_potentials(point_start, point_end);
+        this.calculate_potentials(points);
         this.connections.forEach((connection) => {
             if (Math.round(connection.point0.potential / 0.00001) * 0.00001 > Math.round(connection.point1.potential / 0.00001) * 0.00001) {
                 connection.direction = 1;
@@ -410,8 +415,8 @@ class Graph {
         });
     }
 
-    calculate_amperage(point_start, point_end) {
-        this.calculate_directions(point_start, point_end);
+    calculate_amperage(points, simplify=true) {
+        this.calculate_directions(points);
         var maximum_denominator = 1;
 
         this.connections.forEach((connection) => {
@@ -421,15 +426,16 @@ class Graph {
             if (denominator > maximum_denominator)
                 maximum_denominator = denominator;
         });
-
+        if (simplify){
         
-        this.connections.forEach((connection) => {
-            connection.amperage = connection.amperage * maximum_denominator;
-        });
+            this.connections.forEach((connection) => {
+                connection.amperage = connection.amperage * maximum_denominator;
+            });
+        }
 
         this.total_amperage = 0;
 
-        var input_connections = this.get_connections(point_start, "input");
+        var input_connections = this.get_connections(points[0][0], "input");
 
         input_connections.forEach((connection) => {
             this.total_amperage += connection.amperage;
@@ -437,7 +443,7 @@ class Graph {
     }
 
     calculate_resistance(point_start, point_end) {
-        this.calculate_amperage(point_start, point_end);
+        this.calculate_amperage([[point_start, 1], [point_end, -1]]);
         var one_way = 0;
 
         var point = this.points[point_start];
@@ -452,7 +458,7 @@ class Graph {
     }
 
     solution(point_start, point_end) {
-        this.calculate_amperage(point_start, point_end);
+        this.calculate_amperage([[point_start, 1], [point_end, -1]]);
         var solution = "(";
         var one_way = 0;
 

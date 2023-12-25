@@ -7,7 +7,7 @@ var description = document.getElementById("tool_description");
 
 var graph = new Graph();
 
-var tools = [new EditTool(graph), new DeleteTool(graph),new MoveTool(graph), new SolveTool(graph)];
+var tools = [new EditTool(graph), new DeleteTool(graph),new MoveTool(graph), new SolveTool(graph), new PotentialTool(graph)];
 
 var selected_tool = 0;
 

@@ -315,3 +315,78 @@ class SolveTool {
 
     draw(context, theme) {}
 }
+
+class PotentialTool {
+    constructor(graph) {
+        this.graph = graph;
+        this.points = [];
+        this.potential = 1;
+        this.description = `Потенциал: <input type="number" id="potential" step="0.0001" min="-100000" max="100000" value="1"/> U<br/>
+<button id="solve">Решить</button><br/><br/>
+Инструмент для решения схемы.<br/><br/><br/>
+При ЛКМ на точку - выбирается точка с заданным потенциалом.<br/><br/>
+При ПКМ на точку - точка уберается.<br/><br/>
+При нажатии на кнопку происходит решение<br/><br/>
+`;
+    }
+
+    reset() {
+        this.points = [];
+    }
+
+    init(){
+        this.potential_input = document.getElementById("potential");
+        this.potential_input.value = this.potential;
+        var tool = this;
+        this.potential_input.addEventListener('change', (event)=>{
+            tool.potential = event.target.value;
+        });
+
+        this.solve_button = document.getElementById("solve");
+        this.solve_button.addEventListener("click",(event)=>{
+            tool.graph.calculate_amperage(tool.points, false);
+        });
+    }
+
+    mousedown(event) {
+        if (event.button == 0) {
+            var pos = new Vector(event.offsetX - this.graph.x, event.offsetY - this.graph.y);
+            var nearest = this.graph.nearest(pos);
+            if (nearest > -1 && this.graph.points[nearest].distance(pos) <= 5) {
+                for (var i = 0; i < this.points.length;i++){
+                    if (this.points[i][0] == nearest) 
+                    {
+                        this.points[i][1] = this.potential;
+                        this.graph.points[nearest].potential = this.potential;
+                        return;
+                    }
+                }
+                this.points.push([nearest, this.potential]);
+                this.graph.points[nearest].potential = this.potential;
+            }
+        }
+
+        else if(event.button == 2) {
+            var pos = new Vector(event.offsetX - this.graph.x, event.offsetY - this.graph.y);
+            var nearest = this.graph.nearest(pos);
+            if (nearest > -1 && this.graph.points[nearest].distance(pos) <= 5) {
+                for (var i = 0; i < this.points.length;i++){
+                    if (this.points[i][0] == nearest) 
+                    {
+                        this.points.slice(i, 1);
+                        this.graph.points[nearest].potential = undefined;
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    mouseup(event) {}
+
+    mousemove(event) {}
+
+    keydown(event) {}
+
+    draw(context, theme) {}
+}
